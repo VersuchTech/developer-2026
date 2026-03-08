@@ -18,9 +18,11 @@ class GolferFactory extends Factory
      * @throws RandomException
      */
     public function definition(): array
-    {
+    {    
+        static $debitorAccount = 1000;
         return [
-            'debitor_account' => fake()->randomNumber(random_int(5, 9)),
+            // Task 1: use sequential debitor_account numbers instead of random
+            'debitor_account' => $debitorAccount++,           
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'born_at' => today()->subDays(random_int(0, 365))->subYears(random_int(10, 100))->toImmutable(),
