@@ -35,4 +35,61 @@ class NearestGolferController extends Controller
 
         return response()->json($golfers);
     }
+
+ public function csv(Request $request)
+{
+    $latitude = $request->latitude;
+    $longitude = $request->longitude;
+
+    $golfers = Golfer::selectRaw("
+        *,
+        (6371 * acos(
+            cos(radians(?)) *
+            cos(radians(latitude)) *
+            cos(radians(longitude) - radians(?)) +
+            sin(radians(?)) *
+            sin(radians(latitude))
+        )) AS distance
+    ", [$latitude, $longitude, $latitude])
+    ->orderBy('distance')
+    ->limit(500)
+    ->get();
+
+    $headers = [
+        'Content-Type' => 'text/csv',
+        'Content-Disposition' => 'attachment; filename=\"nearest-golfers.csv\"',
+    ];
+
+    $callback = function () use ($golfers) {
+        $file = fopen('php://output', 'w');
+
+        fputcsv($file, [
+            'id',
+            'debitor_account',
+            'name',
+            'email',
+            'born_at',
+            'latitude',
+            'longitude',
+            'distance'
+        ]);
+
+        foreach ($golfers as $golfer) {
+            fputcsv($file, [
+                $golfer->id,
+                $golfer->debitor_account,
+                $golfer->name,
+                $golfer->email,
+                $golfer->born_at,
+                $golfer->latitude,
+                $golfer->longitude,
+                $golfer->distance,
+            ]);
+        }
+
+        fclose($file);
+    };
+
+    return response()->stream($callback, 200, $headers);
+}
 }
