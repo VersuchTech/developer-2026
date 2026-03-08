@@ -9,8 +9,15 @@ class GolferSeeder extends Seeder
 {
     public function run(): void
     {
-        Golfer::factory()
-            ->count(100)
-            ->create();
+    // Continue debitor_account numbering from the current maximum value in the database.
+    $lastDebitorAccount = Golfer::max('debitor_account') ?? 999;
+
+    for ($i = 1; $i <= 100; $i++) {
+
+        Golfer::factory()->create([
+            'debitor_account' => $lastDebitorAccount + $i
+        ]);
+
+    }
     }
 }
